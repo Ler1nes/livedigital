@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LiveRoom — комната</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="room-page">
+
+<!-- ЭКРАН ВХОДА (лобби) -->
+<div id="lobby" class="lobby">
+  <div class="lobby-card card">
+    <div class="logo small">
+      <span class="logo-mark">▶</span>
+      <span class="logo-text">LiveRoom</span>
+    </div>
+    <h1 id="lobbyRoomTitle">Комната</h1>
+    <p class="muted" id="lobbyRoomCode"></p>
+
+    <div class="preview-wrap">
+      <video id="lobbyVideo" autoplay playsinline muted></video>
+      <div id="lobbyAvatar" class="avatar hidden"></div>
+    </div>
+
+    <input id="nameInput" class="name-input" type="text" maxlength="30"
+           placeholder="Ваше имя" autocomplete="off">
+
+    <div class="lobby-toggles">
+      <button id="lobbyMicBtn" class="ctrl" type="button">
+        <i class="mic-fill"></i>
+        <svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 11v0a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="22"/><line class="slash" x1="4" y1="4" x2="20" y2="20"/></svg>
+        <span>Микрофон</span>
+      </button>
+      <button id="lobbyCamBtn" class="ctrl" type="button">
+        <svg viewBox="0 0 24 24"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M22 8l-6 4 6 4z"/><line class="slash" x1="4" y1="4" x2="20" y2="20"/></svg>
+        <span>Камера</span>
+      </button>
+    </div>
+
+    <button id="settingsLobbyBtn" class="btn btn-ghost lobby-settings" type="button">Настройки устройств</button>
+
+    <p id="lobbyError" class="error-text" hidden></p>
+
+    <button id="joinCallBtn" class="btn btn-primary btn-big">Войти в комнату</button>
+  </div>
+</div>
+
+<!-- ЗВОНОК -->
+<div id="call" class="call" hidden>
+
+  <header class="call-header">
+    <div class="call-title">
+      <span class="logo-mark tiny">▶</span>
+      <strong id="callRoomName">Комната</strong>
+      <span class="pill" id="peerCount">1</span>
+    </div>
+    <button id="copyLinkBtn" class="btn btn-ghost small-btn" type="button">
+      <svg viewBox="0 0 24 24" class="ic"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Скопировать ссылку
+    </button>
+  </header>
+
+  <div class="call-body">
+    <div class="stage">
+      <section id="presentation" class="presentation" hidden>
+        <div id="screensGrid" class="screens-grid"></div>
+        <div id="screensFocus" class="screens-focus" hidden>
+          <div id="focusMain" class="focus-main">
+            <video id="focusVideo" autoplay playsinline muted></video>
+            <div class="focus-bar">
+              <span id="focusTitle" class="focus-title"></span>
+              <button id="focusCloseBtn" class="icon-btn focus-collapse" type="button">Свернуть</button>
+            </div>
+          </div>
+          <div id="focusStrip" class="focus-strip" hidden></div>
+        </div>
+      </section>
+      <div id="grid" class="grid"></div>
+    </div>
+
+    <aside id="chatPanel" class="chat-panel" hidden>
+      <div class="chat-head">
+        <strong>Чат</strong>
+        <button id="chatCloseBtn" class="icon-btn" type="button" title="Закрыть">✕</button>
+      </div>
+      <div id="chatMessages" class="chat-messages"></div>
+      <div class="chat-toolbar">
+        <button id="chatImageBtn" class="icon-btn" type="button" title="Отправить фото">📷</button>
+      </div>
+      <form id="chatForm" class="chat-form">
+        <input id="chatInput" type="text" maxlength="500" placeholder="Сообщение…" autocomplete="off">
+        <button class="btn btn-primary" type="submit">➤</button>
+      </form>
+      <input id="chatImageInput" type="file" accept="image/*" hidden>
+    </aside>
+  </div>
+
+  <footer class="controls">
+    <button id="micBtn" class="ctrl" type="button">
+      <i class="mic-fill"></i>
+      <svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 11v0a7 7 0 0 0 14 0"/><line x1="12" y1="18" x2="12" y2="22"/><line class="slash" x1="4" y1="4" x2="20" y2="20"/></svg>
+      <span>Микрофон</span>
+    </button>
+    <button id="camBtn" class="ctrl" type="button">
+      <svg viewBox="0 0 24 24"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M22 8l-6 4 6 4z"/><line class="slash" x1="4" y1="4" x2="20" y2="20"/></svg>
+      <span>Камера</span>
+    </button>
+    <button id="screenBtn" class="ctrl" type="button">
+      <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><line class="slash" x1="4" y1="4" x2="20" y2="20"/></svg>
+      <span>Экран</span>
+    </button>
+    <button id="handBtn" class="ctrl" type="button">
+      <svg viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-4 0"/><path d="M14 10V4a2 2 0 0 0-4 0v2"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
+      <span>Рука</span>
+    </button>
+    <button id="settingsCallBtn" class="ctrl" type="button">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>Настройки</span>
+    </button>
+    <button id="chatBtn" class="ctrl" type="button">
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>Чат</span>
+    </button>
+    <button id="leaveBtn" class="ctrl ctrl-leave" type="button">
+      <svg viewBox="0 0 24 24" class="phone"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      <span>Выйти</span>
+    </button>
+  </footer>
+
+</div>
+
+<div id="settingsModal" class="modal" hidden>
+  <div class="modal-card">
+    <h3>Настройки устройств</h3>
+
+    <div class="field">
+      <label for="micSelect">Микрофон (вход)</label>
+      <select id="micSelect"></select>
+      <div class="mic-meter" title="Уровень входящего сигнала"><i id="settingsMeter"></i></div>
+      <div class="field-hint">Полоса показывает громкость вашего голоса</div>
+    </div>
+
+    <div class="field">
+      <label for="camSelect">Камера</label>
+      <select id="camSelect"></select>
+    </div>
+
+    <div class="field">
+      <label for="spkSelect">Динамики / наушники (выход)</label>
+      <select id="spkSelect"></select>
+    </div>
+
+    <div id="devicesHint" class="field-hint devices-hint" hidden>
+      Устройства не найдены — разрешите доступ к камере и микрофону и откройте настройки заново
+    </div>
+
+    <div class="modal-actions">
+      <button id="testSoundBtn" class="btn btn-ghost" type="button">Проверить звук</button>
+      <button id="settingsCloseBtn" class="btn btn-primary" type="button">Готово</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+
+<script type="module" src="js/call.js"></script>
+</body>
+</html>

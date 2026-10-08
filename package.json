@@ -1,0 +1,10 @@
+{
+  "name": "livedigital",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Платформа для бесконечных видеокомнат (LiveRoom)",
+  "scripts": {
+    "start": "python -m http.server 8000"
+  }
+}

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LiveRoom — комната для созвонов</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="landing-page">
+
+<header class="site-header">
+  <div class="logo">
+    <span class="logo-mark">▶</span>
+    <span class="logo-text">LiveRoom</span>
+  </div>
+  <div class="header-note">Бесконечные ссылки · до 8 участников</div>
+</header>
+
+<main class="landing-main">
+
+  <section class="hero">
+    <h1>Создайте комнату<br>и отправьте ссылку</h1>
+    <p>Комната живёт бесконечно — студенты могут заходить в любой момент по ссылке.</p>
+  </section>
+
+  <section class="create-card card">
+    <h2>Новая комната</h2>
+    <div class="create-row">
+      <input id="roomNameInput" type="text" maxlength="60"
+             placeholder="Название (например: Группа A — Математика)" autocomplete="off">
+      <button id="createBtn" class="btn btn-primary">Создать</button>
+    </div>
+    <div class="create-row join-row">
+      <input id="joinInput" type="text" placeholder="Вставьте ссылку или код комнаты" autocomplete="off">
+      <button id="joinBtn" class="btn btn-ghost">Войти</button>
+    </div>
+  </section>
+
+  <section class="rooms-section">
+    <h2>Мои комнаты <span id="roomsCount" class="muted"></span></h2>
+    <div id="roomsGrid" class="rooms-grid"></div>
+    <div id="emptyState" class="empty-state" hidden>
+      Пока нет комнат — создайте первую выше.
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  Локальная версия · данные хранятся в этом браузере (localStorage)
+</footer>
+
+<div id="toast" class="toast" hidden></div>
+
+<script type="module" src="js/rooms.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+.DS_Store
+Thumbs.db
+node_modules/
+*.log
+.env
+.env.local
+Desktop.ini
+ntuser.dat*
+*.tmp
+dist/
+build/
+.cache/
+.parcel-cache/
+*.bat.bak
