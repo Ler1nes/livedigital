@@ -617,6 +617,17 @@ svg .slash { display: none; }
   cursor: pointer;
 }
 .tile-vol .vol-val { font-size: 10.5px; color: #cfd6e4; min-width: 34px; text-align: right; }
+.tile-vol .tile-mute {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  padding: 2px 3px;
+  border-radius: 6px;
+}
+.tile-vol .tile-mute:hover { background: rgba(255,255,255,.16); }
+.mic-gain-range { width: 100%; accent-color: var(--ok); cursor: pointer; }
 .tile .hand-badge {
   position: absolute;
   top: 8px;

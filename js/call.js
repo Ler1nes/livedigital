@@ -71,6 +71,8 @@ const micSelect = $('#micSelect');
 const camSelect = $('#camSelect');
 const spkSelect = $('#spkSelect');
 const settingsMeter = $('#settingsMeter');
+const micGainEl = $('#micGain');
+const micGainVal = $('#micGainVal');
 const testSoundBtn = $('#testSoundBtn');
 const devicesHint = $('#devicesHint');
 
@@ -85,13 +87,14 @@ let room = null;
 let selfId = 'self';
 let stateAction = null;
 let chatAction = null;
+let ctrlAction = null;
 
 let localStream = null;
 let screenStream = null;
 let camTrack = null;
 let micTrack = null;
 
-const myState = { name: '', micOn: true, camOn: true, hand: false, screenOn: false };
+const myState = { name: '', micOn: true, camOn: true, hand: false, screenOn: false, gain: 1 };
 const peers = new Map();
 const screens = new Map();
 const chatHistory = [];
@@ -102,13 +105,14 @@ let stripSig = '';
 let audioCtx = null;
 let localGraph = null;
 
-const prefs = { mic: '', cam: '', spk: '' };
+const prefs = { mic: '', cam: '', spk: '', gain: 1 };
 try { Object.assign(prefs, JSON.parse(localStorage.getItem(LS_DEVICES) || '{}')); } catch {}
 function savePrefs() {
   try { localStorage.setItem(LS_DEVICES, JSON.stringify(prefs)); } catch {}
 }
+myState.gain = Number.isFinite(Number(prefs.gain)) ? Math.max(0, Number(prefs.gain)) : 1;
 
-const defaultPeerState = () => ({ name: '', micOn: true, camOn: false, hand: false, screenOn: false });
+const defaultPeerState = () => ({ name: '', micOn: true, camOn: false, hand: false, screenOn: false, gain: 1 });
 
 // ---------- rooms / misc ----------
 function resolveRoomName() {
@@ -246,7 +250,7 @@ function attachPeerAudio(id, stream) {
     try {
       const src = ctx.createMediaStreamSource(stream);
       const gain = ctx.createGain();
-      gain.gain.value = p.volume;
+      gain.gain.value = peerGain(p);
       const analyser = ctx.createAnalyser();
       analyser.fftSize = 512;
       src.connect(gain);
@@ -266,11 +270,17 @@ function attachPeerAudio(id, stream) {
   } catch {}
 }
 
+function peerGain(p) {
+  const raw = p.state ? Number(p.state.gain) : 1;
+  const remote = Number.isFinite(raw) ? raw : 1;
+  return Math.max(0, Math.min(4, (p.volume || 1) * remote));
+}
+
 function applyVolume(p) {
   if (p.graph && audioCtx) {
-    try { p.graph.gain.gain.setTargetAtTime(p.volume, audioCtx.currentTime, 0.02); } catch {}
+    try { p.graph.gain.gain.setTargetAtTime(peerGain(p), audioCtx.currentTime, 0.02); } catch {}
   } else if (p.audioEl) {
-    p.audioEl.volume = Math.min(1, p.volume);
+    p.audioEl.volume = Math.min(1, peerGain(p));
   }
 }
 
@@ -477,7 +487,18 @@ function ensureTile(id) {
       volVal.textContent = range.value + '%';
       applyVolume(p);
     });
-    vol.append(volIc, range, volVal);
+    const muteBtn = document.createElement('button');
+    muteBtn.type = 'button';
+    muteBtn.className = 'tile-mute';
+    muteBtn.textContent = '🔇';
+    muteBtn.title = 'Выключить / включить микрофон участника';
+    muteBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const on = !p.state.micOn;
+      sendCtrl(id, { type: 'mute', on });
+      toast(on ? 'Запрос: включить микрофон' : 'Запрос: выключить микрофон');
+    });
+    vol.append(volIc, range, volVal, muteBtn);
     tile.appendChild(vol);
 
     grid.appendChild(tile);
@@ -664,6 +685,20 @@ function onPeerStream(stream, peerId, meta) {
   applyStateToTile(p.tile, p.state, peerId);
 }
 
+function onCtrl(peerId, data) {
+  if (!data || typeof data !== 'object') return;
+  if (data.type === 'mute') {
+    const on = !!data.on;
+    setMic(on);
+    toast(on ? 'Ваш микрофон включён модератором' : 'Ваш микрофон выключен модератором');
+  }
+}
+
+function sendCtrl(peerId, msg) {
+  if (!ctrlAction) { toast('Нет соединения'); return; }
+  Promise.resolve(ctrlAction.send(msg, { target: peerId })).catch(() => {});
+}
+
 function onPeerState(peerId, data) {
   if (!data || typeof data !== 'object') return;
   const p = ensureTile(peerId);
@@ -673,9 +708,11 @@ function onPeerState(peerId, data) {
     micOn: typeof data.micOn === 'boolean' ? data.micOn : prev.micOn,
     camOn: typeof data.camOn === 'boolean' ? data.camOn : prev.camOn,
     hand: typeof data.hand === 'boolean' ? data.hand : prev.hand,
-    screenOn: typeof data.screenOn === 'boolean' ? data.screenOn : prev.screenOn
+    screenOn: typeof data.screenOn === 'boolean' ? data.screenOn : prev.screenOn,
+    gain: Number.isFinite(Number(data.gain)) ? Math.max(0, Number(data.gain)) : prev.gain
   };
   applyStateToTile(p.tile, p.state, peerId);
+  applyVolume(p);
   if (!p.state.screenOn && screens.has(peerId)) {
     screens.delete(peerId);
     if (focusedScreenId === peerId) focusedScreenId = null;
@@ -828,6 +865,11 @@ async function openSettings() {
   fillSelect(micSelect, devices, 'audioinput', prefs.mic, 'Системный микрофон');
   fillSelect(camSelect, devices, 'videoinput', prefs.cam, 'Системная камера');
   fillSelect(spkSelect, devices, 'audiooutput', prefs.spk, 'Устройство по умолчанию');
+  if (micGainEl) {
+    const pct = Math.round((myState.gain || 0) * 100);
+    micGainEl.value = String(pct);
+    if (micGainVal) micGainVal.textContent = pct + '%';
+  }
   const anyDevice = micSelect.options.length > 1 || camSelect.options.length > 1 || spkSelect.options.length > 1;
   devicesHint.hidden = anyDevice;
 }
@@ -899,6 +941,15 @@ micSelect.addEventListener('change', () => switchMic(micSelect.value));
 camSelect.addEventListener('change', () => switchCam(camSelect.value));
 spkSelect.addEventListener('change', () => switchSpeaker(spkSelect.value));
 testSoundBtn.addEventListener('click', testSound);
+if (micGainEl) {
+  micGainEl.addEventListener('input', () => {
+    myState.gain = Number(micGainEl.value) / 100;
+    if (micGainVal) micGainVal.textContent = micGainEl.value + '%';
+    prefs.gain = myState.gain;
+    savePrefs();
+    broadcast();
+  });
+}
 
 // ---------- join / leave ----------
 async function joinCall() {
@@ -920,8 +971,10 @@ async function joinCall() {
 
     stateAction = room.makeAction('state');
     chatAction = room.makeAction('chat');
+    ctrlAction = room.makeAction('ctrl');
     stateAction.onMessage = (data, ctx) => onPeerState(ctx.peerId, data);
     chatAction.onMessage = data => ingestMessages(data);
+    ctrlAction.onMessage = (data, ctx) => onCtrl(ctx.peerId, data);
 
     addSelfTile();
     room.onPeerJoin = id => onPeerJoin(id);
